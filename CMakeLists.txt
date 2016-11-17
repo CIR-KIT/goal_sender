@@ -9,14 +9,8 @@ find_package(catkin REQUIRED COMPONENTS
   tf
 )
 
-###################################
-## catkin specific configuration ##
-###################################
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES goal_sender
   CATKIN_DEPENDS roscpp actionlib geometry_msgs move_base_msgs tf
-#  DEPENDS system_lib
 )
 
 # check c++11 / c++0x
@@ -31,15 +25,9 @@ else()
   message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-)
+include_directories(${catkin_INCLUDE_DIRS})
 
-## Declare a C++ executable
 add_executable(goal_sender_node src/goal_sender_node.cpp)
-
-## Specify libraries to link a library or executable target against
-target_link_libraries(goal_sender_node
-  ${catkin_LIBRARIES}
-)
+add_dependencies(goal_sender_node ${catkin_EXPORTED_TARGETS})
+target_link_libraries(goal_sender_node ${catkin_LIBRARIES})
 
