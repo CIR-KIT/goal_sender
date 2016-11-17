@@ -17,6 +17,7 @@ double calcDistance(const geometry_msgs::Pose&, const geometry_msgs::Pose&);
 
 struct Waypoint {
   using Container = std::vector<Waypoint>;
+
   static Container readCsv(std::string&&);
   Waypoint(move_base_msgs::MoveBaseGoal&&, double);
 
@@ -57,7 +58,7 @@ int main(int argc, char* argv[]){
   return 0;
 }
 
-geometry_msgs::Pose getFramePose(const tf::TransformListener& tf, const std::string& parent, const std::string& child) {
+inline geometry_msgs::Pose getFramePose(const tf::TransformListener& tf, const std::string& parent, const std::string& child) {
   tf::StampedTransform transform;
   try {
     tf.lookupTransform(parent, child, ros::Time(0), transform);
@@ -75,7 +76,7 @@ inline double calcDistance(const geometry_msgs::Pose& a, const geometry_msgs::Po
   return sqrt(pow((a.position.x - b.position.x), 2.0) + pow((a.position.y - b.position.y), 2.0));
 }
 
-Waypoint::Container Waypoint::readCsv(std::string&& path) { // but not move now
+inline Waypoint::Container Waypoint::readCsv(std::string&& path) { // but not move now
   if (path.empty()) {
     ROS_ERROR("I need path of waypoint");
     throw std::invalid_argument {"no exist file"};
@@ -116,11 +117,11 @@ inline Waypoint::Waypoint(move_base_msgs::MoveBaseGoal&& goal, double valid_rang
     valid_range {valid_range}
 {}
 
-GoalSender::GoalSender(std::string&& path)
-  : waypoints {Waypoint::readCsv(std::move(path))},
-    now_waypoint {waypoints.begin()},
-    tf_listener {},
-    move_base_client {"move_base", true}
+inline GoalSender::GoalSender(std::string&& path)
+: waypoints {Waypoint::readCsv(std::move(path))},
+  now_waypoint {waypoints.begin()},
+  tf_listener {},
+  move_base_client {"move_base", true}
 {
   const auto& now_pos = now_waypoint->goal.target_pose.pose;
   ROS_INFO("Set first waypoint: x:[%f], y:[%f]", now_pos.position.x, now_pos.position.y);
@@ -140,7 +141,7 @@ inline bool GoalSender::isFinishWaypoint() {
   return now_waypoint == waypoints.end();
 }
 
-bool GoalSender::checkToNext() {
+inline bool GoalSender::checkToNext() {
   const auto& robot_pos = getFramePose(tf_listener, "/map", "/base_link");
   const auto& waypoint_pos = now_waypoint->goal.target_pose.pose;
   const auto& distance = calcDistance(robot_pos, waypoint_pos); // distance of between robot and target
@@ -151,7 +152,7 @@ bool GoalSender::checkToNext() {
   return false;
 }
 
-void GoalSender::sendGoalPoint() {
+inline void GoalSender::sendGoalPoint() {
   if (isFinishWaypoint()) { // finish waypoint
     move_base_client.cancelGoal(); // cancel moveing
     ROS_INFO("Finish waypoints");
@@ -162,6 +163,6 @@ void GoalSender::sendGoalPoint() {
   ROS_INFO("Use waypoint [%ld]", now_waypoint - waypoints.begin());
 }
 
-Waypoint::Container::size_type GoalSender::nowPointNumber() {
+inline Waypoint::Container::size_type GoalSender::nowPointNumber() {
   return now_waypoint - waypoints.begin();
 }
